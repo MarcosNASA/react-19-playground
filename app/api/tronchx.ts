@@ -20,17 +20,23 @@ const get = asyncify(() => {
   return tronchxs
 })
 
-const upsert = asyncify((tronchxToUpsert: Tronchx) => {
+const upsert = asyncify(async (tronchxToUpsert: Tronchx) => {
   const {
     data: { tronchxs },
   } = db
-  const tronchxIndex = tronchxs.findIndex(
-    (tronchx) => tronchx.id === tronchxToUpsert.id,
-  )
-  if (tronchxIndex === -1) {
-    db.data.tronchxs.push(tronchxToUpsert)
-  }
-  db.data.tronchxs[tronchxIndex] = tronchxToUpsert
+
+  await db.update(({ tronchxs }) => {
+    const tronchxIndex = tronchxs.findIndex(
+      (tronchx) => tronchx.id === tronchxToUpsert.id,
+    )
+    if (tronchxIndex === -1) {
+      tronchxs.push(tronchxToUpsert)
+      return tronchxs[tronchxs.length - 1]
+    }
+    tronchxs[tronchxIndex] = tronchxToUpsert
+  })
+
+  return tronchxs[tronchxs.length - 1]
 })
 
 export const TronchxsAPI = {
